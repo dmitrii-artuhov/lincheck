@@ -42,9 +42,7 @@ class StressStrategy(
         }
     }
 
-    override fun runInvocation(): InvocationResult {
-        return runner.run()
-    }
+    override fun runInvocation(): InvocationResult = runner.run()
 
     override fun close() {
         runner.close()
