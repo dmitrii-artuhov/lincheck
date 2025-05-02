@@ -83,7 +83,13 @@ internal class LincheckClassVisitor(
         }
         val intrinsicDelegateVisitor = mv
         fun MethodVisitor.newAdapter() = GeneratorAdapter(this, access, methodName, desc)
+        if (className.contains("kotlinx/coroutines/internal/ConcurrentKt")) {
+            val a = 0
+        }
         if (methodName == "<clinit>") {
+            if (className.contains("kotlinx/coroutines/internal/ConcurrentKt")) {
+                val a = 0
+            }
             mv = WrapMethodInIgnoredSectionTransformer(fileName, className, methodName, mv.newAdapter())
             return mv
         }

@@ -154,6 +154,7 @@ internal object LincheckJavaAgent {
                 val eagerlyTransformedClasses = getLoadedClassesToInstrument()
                     .filter { isEagerlyInstrumentedClass(it.name) }
                     .toTypedArray()
+                //println("Eagerly transformed classes: ${eagerlyTransformedClasses.joinToString("\n") { it.name.toInternalClassName() }}")
                 instrumentation.retransformClasses(*eagerlyTransformedClasses)
                 instrumentedClasses.addAll(eagerlyTransformedClasses.map { it.name })
             }
@@ -381,19 +382,35 @@ internal object LincheckClassFileTransformer : ClassFileTransformer {
         // this can be related to the Kotlin compiler bug:
         // - https://youtrack.jetbrains.com/issue/KT-16727/
         if (internalClassName == null) return null
+        ////println("== Pre-transform class: $internalClassName")
         // If the class should not be transformed, return immediately.
+        if (internalClassName.contains("kotlinx/coroutines/internal")) {
+            //println("Consider: $internalClassName")
+        }
         if (!shouldTransform(internalClassName.toCanonicalClassName(), instrumentationMode)) {
+            if (internalClassName.contains("kotlinx/coroutines/internal")) {
+                //println("Do  not transform $internalClassName")
+            }
+
             return null
         }
         // In the model checking mode, we transform classes lazily,
         // once they are used in the testing code.
+        //println("[in=${internalClassName.toCanonicalClassName() in instrumentedClasses}, isEager=${isEagerlyInstrumentedClass(internalClassName.toCanonicalClassName())}] Should transform $internalClassName?")
+
         if (!INSTRUMENT_ALL_CLASSES &&
             instrumentationMode == MODEL_CHECKING &&
             // do not re-transform already instrumented classes
             internalClassName.toCanonicalClassName() !in instrumentedClasses &&
             // always transform eagerly instrumented classes
             !isEagerlyInstrumentedClass(internalClassName.toCanonicalClassName())) {
+            //if (internalClassName.contains("kotlinx/coroutines/internal/ConcurrentKt")) {
+                //println("[!in=${internalClassName.toCanonicalClassName() !in instrumentedClasses}, !isEager=${!isEagerlyInstrumentedClass(internalClassName.toCanonicalClassName())}] Do not transform $internalClassName (from additional check)")
+            //}
             return null
+        }
+        if (internalClassName.contains("kotlinx/coroutines/internal")) {
+            //println("Do transform $internalClassName")
         }
         return transformImpl(loader, internalClassName, classBytes)
     }
@@ -403,6 +420,7 @@ internal object LincheckClassFileTransformer : ClassFileTransformer {
         internalClassName: String,
         classBytes: ByteArray
     ): ByteArray = transformedClassesCache.computeIfAbsent(internalClassName.toCanonicalClassName()) {
+        //println("Transforming $internalClassName")
         Logger.debug { "Transforming $internalClassName" }
 
         val reader = ClassReader(classBytes)

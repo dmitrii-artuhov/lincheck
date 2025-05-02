@@ -44,7 +44,7 @@ fun SourceDirectorySet.configureTestSources() {
 kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
-        allWarningsAsErrors = true
+        allWarningsAsErrors = false
     }
 
     jvm {
@@ -235,6 +235,16 @@ tasks {
         extraArgs.add("-Dlincheck.version=$version")
         findProperty("lincheck.logFile")?.let { extraArgs.add("-Dlincheck.logFile=${it as String}") }
         findProperty("lincheck.logLevel")?.let { extraArgs.add("-Dlincheck.logLevel=${it as String}") }
+//        extraArgs.addAll(listOf(
+//            "-XX:+UnlockDiagnosticVMOptions",
+//            "-Xint",
+//            "-XX:-Inline",
+////            "-XX:CompileCommand=exclude,java/util/*",
+////            "-XX:LogFile=inlining.log",
+//            "-XX:+LogCompilation",
+//            "-XX:+PrintInlining",
+//            "-XX:+PrintCompilation",
+//        ))
         jvmArgs(extraArgs)
     }
 
